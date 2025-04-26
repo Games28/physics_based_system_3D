@@ -40,6 +40,8 @@ face_t cube_faces[N_CUBE_FACES] = {
 
 };
 
+AABB3 GetAABB();
+
 void free_mesh_textures()
 {
 	if (meshes.size() != 0)
@@ -294,3 +296,4 @@ void load_mesh_png_data(mesh_t* mesh, const char* filename)
 {
 	mesh->texture = new olc::Sprite(filename);
 }
+

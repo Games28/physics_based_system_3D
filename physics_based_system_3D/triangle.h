@@ -45,6 +45,8 @@ void draw_triangle_fill(DepthDrawer& depth_draw, olc::PixelGameEngine* pge,
 
 int edge_cross(vec2_t* a, vec2_t* b, vec2_t* p);
 
+float segIntersectTri(const vec3_t& s0, const vec3_t& s1, const triangle_t& tri);
+
 bool is_top_left(vec2_t* start, vec2_t* end);
 
 ////////////////////////rasteraization ////////////////////////////////////

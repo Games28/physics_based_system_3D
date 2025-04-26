@@ -2,16 +2,18 @@
 #ifndef AABB3_STRUCT_H
 #define AABB3_STRUCT_H
 
-#include "vf3d.h"
+#include "Vector.h"
 
 struct AABB3 {
-	vf3d min{ INFINITY, INFINITY, INFINITY }, max = -min;
+	vec3_t min = { INFINITY, INFINITY, INFINITY }, max = { -INFINITY, -INFINITY, -INFINITY };
 
-	vf3d getCenter() const {
-		return (min + max) / 2;
+	vec3_t getCenter() const {
+		vec3_t result = vec3_add(min, max);
+		result = vec3_div(result, 2);
+		return result;
 	}
 
-	bool contains(const vf3d& p) const {
+	bool contains(const vec3_t& p) const {
 		if (p.x<min.x || p.x>max.x) return false;
 		if (p.y<min.y || p.y>max.y) return false;
 		if (p.z<min.z || p.z>max.z) return false;
@@ -25,7 +27,7 @@ struct AABB3 {
 		return true;
 	}
 
-	void fitToEnclose(const vf3d& p) {
+	void fitToEnclose(const vec3_t& p) {
 		if (p.x < min.x) min.x = p.x;
 		if (p.y < min.y) min.y = p.y;
 		if (p.z < min.z) min.z = p.z;
@@ -33,5 +35,7 @@ struct AABB3 {
 		if (p.y > max.y) max.y = p.y;
 		if (p.z > max.z) max.z = p.z;
 	}
+
+	
 };
 #endif//AABB3_STRUCT_H

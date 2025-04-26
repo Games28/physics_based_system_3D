@@ -73,6 +73,23 @@ mat4_t mat4_mul_mat4(mat4_t a, mat4_t b)
     return m;
 }
 
+mat4_t mat4_mul_mat4_test(mat4_t a, mat4_t b)
+{
+    mat4_t m;
+
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            float sum = 0;
+            for (int k = 0; k < 4; k++) sum += a.m[i][k] * b.m[k][j];
+            m.m[i][j] = sum;
+        }
+    }
+
+    return m;
+}
+
 mat4_t mat4_make_rotation_x(float angle)
 {
     //cos
@@ -191,6 +208,87 @@ mat4_t mat4_look_at(vec3_t eye, vec3_t target, vec3_t up)
 
     return view_matrix;
 }
+
+mat4_t mat4_inverse(const mat4_t& m)
+{
+    mat4_t cofactors;
+
+    //get cofactor matrix
+    for (int i = 0; i < 4; i++)
+    {
+        for (int j = 0; j < 4; j++)
+        {
+            cofactors.m[i][j] = ((i + j) % 2 ? -1 : 1) * mat4_minor(i, j);
+        }
+    }
+
+    //transpose of cofactor
+    mat4_t adjugate;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            adjugate.m[i][j] = cofactors.m[j][i];
+        }
+    }
+
+    //get determinant using first row and cofactors
+    float det = 0;
+    for (int j = 0; j < 4; j++) {
+        det += m.m[0][j] * cofactors.m[0][j];
+    }
+
+    
+
+    //divide adjugate by determinant
+    mat4_t inv;
+    for (int i = 0; i < 4; i++) {
+        for (int j = 0; j < 4; j++) {
+            inv.m[i][j] = adjugate.m[i][j] / det;
+        }
+    }
+
+    return inv;
+}
+
+mat4_t mat4_quickInverse(const mat4_t& a)
+{
+    mat4_t b;
+    b.m[0][0] = a.m[0][0], b.m[0][1] = a.m[1][0], b.m[0][2] = a.m[2][0];
+    b.m[1][0] = a.m[0][1], b.m[1][1] = a.m[1][1], b.m[1][2] = a.m[2][1];
+    b.m[2][0] = a.m[0][2], b.m[2][1] = a.m[1][2], b.m[2][2] = a.m[2][2];
+    b.m[3][0] = -(a.m[3][0] * b.m[0][0] + a.m[3][1] * b.m[1][0] + a.m[3][2] * b.m[2][0]);
+    b.m[3][1] = -(a.m[3][0] * b.m[0][1] + a.m[3][1] * b.m[1][1] + a.m[3][2] * b.m[2][1]);
+    b.m[3][2] = -(a.m[3][0] * b.m[0][2] + a.m[3][1] * b.m[1][2] + a.m[3][2] * b.m[2][2]);
+    b.m[3][3] = 1;
+    return b;
+}
+
+ 
+
+float mat4_minor(int row, int col)
+{
+    float v[4][4] = { 0 };
+    float m[3][3];
+    int subi = 0;
+    for (int i = 0; i < 4; ++i)
+    {
+        if (i == row) continue;
+        int subj = 0;
+        for (int j = 0; j < 4; ++j)
+        {
+            if (j == col) continue;
+            m[subi][subj] = v[i][j];
+            subj++;
+
+        }
+        subi++;
+    }
+    return
+        m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
+        m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
+        m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+}
+
+
 
 mat3_t mat3_t::operator=(const mat3_t& m) const
 {

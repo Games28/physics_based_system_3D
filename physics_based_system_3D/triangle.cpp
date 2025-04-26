@@ -97,6 +97,61 @@ int edge_cross(vec2_t* a, vec2_t* b, vec2_t* p)
 
 	return ab.x * ap.y - ab.y * ap.x;
 }
+float segIntersectTri(const vec3_t& s0, const vec3_t& s1, const triangle_t& tri)
+{
+	static const float epsilon = 1e-6f;
+
+	vec3_t tri_0 = vec3_from_vec4(tri.points[0]);
+	vec3_t tri_1 = vec3_from_vec4(tri.points[1]);
+	vec3_t tri_2 = vec3_from_vec4(tri.points[2]);
+	//column vectors
+	vec3_t a = vec3_sub(s1, s0);
+	vec3_t b = vec3_sub(tri_0, tri_1);
+	vec3_t c = vec3_sub(tri_0, tri_2);
+	vec3_t d = vec3_sub(tri_0, s0);
+	float det = a.x * (b.y * c.z - c.y * b.z)
+		- b.x * (a.y * c.z - c.y * a.z)
+		+ c.x * (a.y * b.z - b.y * a.z);
+
+	if (std::abs(det) < epsilon) return -1;
+
+	vec3_t f = vec3_t(
+		a.z * c.y - c.z * a.y,
+		a.x * c.z - c.x * a.z,
+		a.y * c.x - c.y * a.x
+	);
+
+	f = vec3_div(f, det);
+	float u = vec3_dot(f,d);
+	//out of range
+	if (u < 0 || u>1) return -1;
+
+	vec3_t g = vec3_t(
+		a.y * b.z - b.y * a.z,
+		a.z * b.x - b.z * a.x,
+		a.x * b.y - b.x * a.y
+	);
+	g = vec3_div(g, det);
+
+	float v = vec3_dot(g,d);
+	//out of range
+	if (v < 0 || v>1) return -1;
+
+
+	//barycentric uv coordinates
+	if (u + v > 1) return -1;
+
+	vec3_t e = vec3_t(
+		b.y * c.z - c.y * b.z,
+		b.z * c.x - c.z * b.x,
+		b.x * c.y - c.x * b.y
+	);
+	e = vec3_div(e, det);
+	return vec3_dot(e,d);
+}
+
+
+
 bool is_top_left(vec2_t* start, vec2_t* end)
 {
 	vec2_t edge = { end->x - start->x, end->y - start->y };

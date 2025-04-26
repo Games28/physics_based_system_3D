@@ -4,6 +4,7 @@
 #include "triangle.h"
 #include <string>
 #include <vector>
+#include "aabb3.h"
 
 //keep for voxel implmentation
 #define N_CUBE_VERTICES 8
@@ -26,7 +27,11 @@ std::vector<face_t> faces;
 	vec3_t scale;
 	vec3_t translation;
 	int index;
+	
+	
 }mesh_t;
+
+
 
 void free_mesh_textures();
 mesh_t* get_mesh(int index);

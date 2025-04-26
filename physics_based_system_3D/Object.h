@@ -9,6 +9,7 @@
 #include "camera.h"
 #include "clipping.h"
 #include "depthdrawer.h"
+#include "aabb3.h"
 
 
 
@@ -36,6 +37,7 @@ public:
 	mesh_t* mesh;
 	bool ispickedup = false;
 	
+	AABB3 scene_bounds;
 
 	//physics test
 	vec3_t velocity;

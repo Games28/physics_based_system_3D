@@ -1,15 +1,13 @@
 #define OLC_PGE_APPLICATION
 #include "olcPixelGameEngine.h"
-//#include "depthdrawer.h"
-//#include "Vector.h"
-//#include "Mesh.h"
+
 #include "Graphics.h"
 
 //#include "light.h"
 #include "texture.h"
 //#include "triangle.h"
 #include "camera.h"
-//#include "clipping.h"
+
 #include "Map.h"
 #include "Object.h"
 
@@ -21,6 +19,12 @@
 #define  N_POINTS 730
 #define MAX_TRIANGLES 10000
 
+
+struct Particle
+{
+	vec3_t pos, old_pos, acc;
+
+};
 
 
 
@@ -46,13 +50,21 @@ public:
 	mat4_t proj_matrix;
 	mat4_t view_matrix;
 	mat4_t world_matrix;
+	mat4_t view_matrix_inverse;
 	
 	float zoom_factor = 0.0f;
 	int num_triangles_to_render = 0;
 	float offsetX = 0.0f;
 	float offsetY = 0.0f;
 
-	//collsion detection
+	//collsion detection///////////////////////////////////////////////////
+	
+
+	
+
+	
+	/// /////////////////////////////////////////////////////////////////
+
 	olc::Sprite* reticle = nullptr;
 	
 	float prev_rotation = 0, curr_rotation = 0;
@@ -77,6 +89,7 @@ public:
 	{
 		//creates matrix to be used with mesh calculation
 		mat4_t scale_matrix;
+		
 		mat4_t translation_matrix;
 		mat4_t rotation_matrix_x;
 		mat4_t rotation_matrix_y;
@@ -97,6 +110,7 @@ public:
 	
 		view_matrix = mat4_look_at(get_camera_position(), target, up_direction);
 		
+		view_matrix_inverse = mat4_quickInverse(view_matrix);
 		
 		//trangles_to_render.clear();
 
@@ -510,11 +524,52 @@ public:
 		for (int mesh_index = 0; mesh_index < objectlist.size(); mesh_index++)
 		{
 			Object* obj = objectlist[mesh_index];
-			
+			if (mesh_index == 0)
+			{
+				obj->translation = get_camera_position();
+			}
 			
 			
 			process_graphics_pipline_stages(obj,mesh_index);
 			
+		}
+		if (GetMouse(0).bHeld)
+		{
+			for (auto& obj : objectlist)
+			{
+
+
+				mat4_t invPv = mat4_inverse(mat4_mul_mat4(view_matrix_inverse,proj_matrix ));
+				float ndc_x = 1 - 2.f * GetMouseX() / ScreenWidth();
+				float ndc_y = 1 - 2.f * GetMouseY() / ScreenHeight();
+				vec3_t clip(ndc_x, ndc_y, 1);
+				vec4_t tempworld = mat4_mul_vec4(invPv, vec4_from_vec3(clip));
+				float world_factor = tempworld.w;
+				vec3_t world = vec3_from_vec4(tempworld);
+				world = vec3_div(world, world_factor);
+
+				vec3_t start = get_camera_position();
+				float record = INFINITY;
+				triangle_t* closest = nullptr;
+				for (auto& tri : obj->trangles_to_render)
+				{
+					float dist = segIntersectTri(start, world, tri);
+					if (dist > 0 && dist < record)
+					{
+						record = dist;
+						closest = &tri;
+					}
+				}
+
+				if (closest)
+				{
+
+					DrawString(30, 30, "targeted!");
+
+				}
+
+
+			}
 		}
 
 		Object* obj = objectlist[0];
