@@ -43,7 +43,7 @@ public:
 	std::vector<Object*> objectlist;
 	
 	DepthDrawer depth_draw;
-
+	bool hascollided = false;
 	Render_Method render_method = RENDER_FILL_TRIANGLE;
 	Cull_Method cull_method = CULL_BACKFACE;
 	lighting_method light_method = FLAT_SHADING;
@@ -51,7 +51,7 @@ public:
 	mat4_t view_matrix;
 	mat4_t world_matrix;
 	mat4_t view_matrix_inverse;
-	
+	float camera_player_radius = 0.1f;
 	float zoom_factor = 0.0f;
 	int num_triangles_to_render = 0;
 	float offsetX = 0.0f;
@@ -59,7 +59,7 @@ public:
 
 	//collsion detection///////////////////////////////////////////////////
 	
-
+	bool player_collision = false;
 	
 
 	
@@ -85,8 +85,39 @@ public:
 
 public:
 
+	bool hasCollided()
+	{
+		for (auto& obj : objectlist)
+		{
+			for (auto& tri : obj->triangles)
+			{
+				vec3_t close_pt = getClosePt(vec3_from_vec4(tri.points[0]),
+					vec3_from_vec4(tri.points[1]),
+					vec3_from_vec4(tri.points[2]),
+					get_camera_position());
+
+				vec3_t player_sub_pt = vec3_sub(get_camera_position(), close_pt);
+				float dist = vec3_length(player_sub_pt);
+
+				std::cout << "dist: " << dist << std::endl;
+				if (dist < camera_player_radius * camera_player_radius)
+				{
+					//DrawString(30, 30, "is_colliding");
+					return true;
+				}
+				else
+				{
+					//DrawString(30, 30, "not_colliding");
+					return false;
+				}
+
+			}
+		}
+	}
+
 	void process_graphics_pipline_stages(Object* obj, int index)
 	{
+		obj->triangles.clear();
 		//creates matrix to be used with mesh calculation
 		mat4_t scale_matrix;
 		
@@ -110,17 +141,19 @@ public:
 	
 		view_matrix = mat4_look_at(get_camera_position(), target, up_direction);
 		
-		view_matrix_inverse = mat4_quickInverse(view_matrix);
+		
 		
 		//trangles_to_render.clear();
-
+		
+		
+		
 
 		int num_faces = (int)obj->mesh->faces.size();
 
 		//face = one triangle, 12 = one cube/box
 		for (int i = 0; i < num_faces; i++)
 		{
-
+			triangle_t tri;
 			//gets the 3d face point (3 in total) of the 3 point triangle
 			face_t mesh_face = obj->mesh->faces[i];
 			vec3_t face_vertices[3];
@@ -131,7 +164,9 @@ public:
 			face_vertices[1] = obj->mesh->vertices[mesh_face.b - 1];
 			face_vertices[2] = obj->mesh->vertices[mesh_face.c - 1];
 
-
+			tri.points[0] = vec4_from_vec3(face_vertices[0]);
+			tri.points[1] = vec4_from_vec3(face_vertices[1]);
+			tri.points[2] = vec4_from_vec3(face_vertices[2]);
 
 			//creates an array of vector 3 to store new coord x,y,z info with new calculation of 
 			// rotation and orientation of triangle face.
@@ -168,42 +203,43 @@ public:
 
 				//save transformed vertex in the array of transformed vertices
 				transformed_vertices[j] = transformed_vertex;
+				
 			}
-
+			obj->triangles.push_back(tri);
 
 			vec3_t face_normal = get_triangle_normal(transformed_vertices);
 			
 			
 			//collision detection info
-			vec4_t collision_points[3];
-			//loop all three vertices to preform projection
-			for (int j = 0; j < 3; j++)
-			{
-				// project the current vertex
-				collision_points[j] = transformed_vertices[j];
-
-
-				if (collision_points[j].w != 0) {
-					collision_points[j].x /= collision_points[j].w;
-					collision_points[j].y /= collision_points[j].w;
-					collision_points[j].z /= collision_points[j].w;
-				}
-
-				//invert the y values to account for flipped screen y corrdinate
-				collision_points[j].y *= -1;
-
-
-				collision_points[j].x *= (float)(ScreenWidth() / 2);
-				collision_points[j].y *= (float)(ScreenHeight() / 2);
-
-
-
-
-				//translating the projected points to the middle of the screen
-				collision_points[j].x += (float)(ScreenWidth() / 2);
-				collision_points[j].y += (float)(ScreenHeight() / 2);
-
-			}
+			//vec4_t collision_points[3];
+			////loop all three vertices to preform projection
+			//for (int j = 0; j < 3; j++)
+			//{
+			//	// project the current vertex
+			//	collision_points[j] = transformed_vertices[j];
+			//
+			//
+			//	if (collision_points[j].w != 0) {
+			//		collision_points[j].x /= collision_points[j].w;
+			//		collision_points[j].y /= collision_points[j].w;
+			//		collision_points[j].z /= collision_points[j].w;
+			//	}
+			//
+			//	//invert the y values to account for flipped screen y corrdinate
+			//	collision_points[j].y *= -1;
+			//
+			//
+			//	collision_points[j].x *= (float)(ScreenWidth() / 2);
+			//	collision_points[j].y *= (float)(ScreenHeight() / 2);
+			//
+			//
+			//
+			//
+			//	//translating the projected points to the middle of the screen
+			//	collision_points[j].x += (float)(ScreenWidth() / 2);
+			//	collision_points[j].y += (float)(ScreenHeight() / 2);
+			//
+			//}
 
 		
 			
@@ -300,7 +336,7 @@ public:
 				float light_intensity_factor = -vec3_dot(face_normal, get_Light_direction());
 
 
-				olc::Pixel triangle_color = light_apply_intensity(obj->mesh->color, light_intensity_factor);
+				olc::Pixel triangle_color = light_apply_intensity(obj->object_color, light_intensity_factor);
 
 				triangle_t projected_triangle =
 				{
@@ -314,7 +350,7 @@ public:
 					 {triangle_after_clipping.texcoords[1].u,triangle_after_clipping.texcoords[1].v},
 					 {triangle_after_clipping.texcoords[2].u,triangle_after_clipping.texcoords[2].v}
 					},
-					triangle_color,
+					obj->object_color,
 					obj->mesh->texture
 
 				};
@@ -364,20 +400,22 @@ public:
 
 	
 
-		Object* player = new Object(vec3_new(1.0f, 1.0f, 1.0f),
-			vec3_new(get_camera_position().x, get_camera_position().y, get_camera_position().z),
-			vec3_new(0.0f, 0.0f, 0.0f));
-		player->load_cube_mesh(DEFUALT, olc::CYAN, "./assets/blank.png");
-		objectlist.push_back(player);
+		//Object* player = new Object(vec3_new(1.0f, 1.0f, 1.0f),
+		//	vec3_new(get_camera_position().x, get_camera_position().y, get_camera_position().z),
+		//	vec3_new(0.0f, 0.0f, 0.0f));
+		//player->load_cube_mesh(DEFUALT, olc::CYAN, "./assets/blank.png");
 		
-		Object* obj = new Object(vec3_new(1, 1, 1), vec3_new(-2, 0, +5), vec3_new(0, 0, 0));
-		obj->load_cube_mesh(DEFUALT, olc::CYAN, "./assets/bluestone.png");
+		//objectlist.push_back(player);
+		
+		Object* obj = new Object(vec3_new(10, 1, 10), vec3_new(0, -10, +5), vec3_new(0, 0, 0));
+		obj->load_obj_mesh("./assets/cube.obj",olc::CYAN, "./assets/bluestone.png");
+		
 		
 		objectlist.push_back(obj);
 		Object* obj2 = new Object(vec3_new(1, 1, 1), vec3_new(+4, 0, +5), vec3_new(0, 0, 0));
 		obj2->load_cube_mesh(DEFUALT, olc::CYAN, "./assets/r2idletest.png");
 
-		objectlist.push_back(obj2);
+		//objectlist.push_back(obj2);
 	   
 
 		depth_draw.Init(this);
@@ -387,7 +425,8 @@ public:
 
 	void input(float deltatime)
 	{
-		cam_prev = get_camera_direction();
+		vec3_t newpos = { 0 };
+		cam_prev = get_camera_position();
 		vec3_t up_direction = { 0,1,0 };
 		prev_rotation = get_camera_yaw();
 		//rendering type
@@ -404,37 +443,18 @@ public:
 		if (GetKey(olc::NP1).bPressed) { light_method = FLAT_SHADING; };
 
 		//camera controls
-		if (GetKey(olc::SHIFT).bHeld)
+		
+		
+		if (GetKey(olc::A).bHeld)
 		{
-			//stafe around target mostly working code. need to work on how to keep target object in the middle if moving
-			if (GetKey(olc::A).bHeld)
-			{
-				rotate_camera_yaw(-1.0f * deltatime);
-				stafe = vec3_cross(up_direction, get_camera_direction());
-
-				stafe = vec3_mul(stafe, 5.0f * deltatime);
-				set_new_camera_position(vec3_add(get_camera_position(), stafe));
-			};
-			if (GetKey(olc::D).bHeld)
-			{
-				rotate_camera_yaw(+1.0f * deltatime);
-				stafe = vec3_cross(up_direction, get_camera_direction());
-				stafe = vec3_mul(stafe, 5.0f * deltatime);
-				set_new_camera_position(vec3_sub(get_camera_position(), stafe));
-			};
+			rotate_camera_yaw(-1.0f * deltatime);
 		}
-		else
+		if (GetKey(olc::D).bHeld)
 		{
-			if (GetKey(olc::A).bHeld)
-			{
-				rotate_camera_yaw(-1.0f * deltatime);
-			}
-			if (GetKey(olc::D).bHeld)
-			{
-				rotate_camera_yaw(+1.0f * deltatime);
-			}
-
+			rotate_camera_yaw(+1.0f * deltatime);
 		}
+
+		
 
 		offsetX = 0.0f;
 		curr_rotation = get_camera_yaw();
@@ -477,8 +497,18 @@ public:
 			set_new_camera_position(vec3_add(get_camera_position(), stafe));
 			
 		};
-		if (GetKey(olc::UP).bHeld) { update_camera_position(vec3_new(0.0f, +3.0f * deltatime, 0.0f)); };
-		if (GetKey(olc::DOWN).bHeld) { update_camera_position(vec3_new(0.0f, -3.0f * deltatime, 0.0f)); };
+		if (GetKey(olc::UP).bHeld) 
+		{
+			newpos = vec3_new(0.0f, +3.0f * deltatime, 0.0f);
+			
+				//update_camera_position(vec3_new(0.0f, +3.0f * deltatime, 0.0f)); 
+		};
+		if (GetKey(olc::DOWN).bHeld)
+		{
+			newpos = vec3_new(0.0f, -3.0f * deltatime, 0.0f);
+			
+				//update_camera_position(vec3_new(0.0f, -3.0f * deltatime, 0.0f)); 
+		};
 		if (GetKey(olc::W).bHeld)
 		{
 			set_new_camera_forward_velocity(vec3_mul(get_camera_direction(), 5.0f * deltatime));
@@ -503,7 +533,18 @@ public:
 		}
 
 
-		cam_curr = get_camera_direction();
+		////update stuff
+		//if (!hasCollided())
+		//{
+		//	DrawString(30, 30, "is_colliding");
+		//}
+		//else
+		//{
+		//	DrawString(30, 30, "not_colliding");
+		//}
+		update_camera_position(newpos);
+
+		cam_curr = get_camera_position();
 	}
 
 
@@ -524,53 +565,40 @@ public:
 		for (int mesh_index = 0; mesh_index < objectlist.size(); mesh_index++)
 		{
 			Object* obj = objectlist[mesh_index];
-			if (mesh_index == 0)
-			{
-				obj->translation = get_camera_position();
-			}
+			
 			
 			
 			process_graphics_pipline_stages(obj,mesh_index);
 			
 		}
-		if (GetMouse(0).bHeld)
+		
+		hascollided = false;
+		for (auto& obj : objectlist)
 		{
-			for (auto& obj : objectlist)
+			for (auto& tri : obj->triangles)
 			{
-
-
-				mat4_t invPv = mat4_inverse(mat4_mul_mat4(view_matrix_inverse,proj_matrix ));
-				float ndc_x = 1 - 2.f * GetMouseX() / ScreenWidth();
-				float ndc_y = 1 - 2.f * GetMouseY() / ScreenHeight();
-				vec3_t clip(ndc_x, ndc_y, 1);
-				vec4_t tempworld = mat4_mul_vec4(invPv, vec4_from_vec3(clip));
-				float world_factor = tempworld.w;
-				vec3_t world = vec3_from_vec4(tempworld);
-				world = vec3_div(world, world_factor);
-
-				vec3_t start = get_camera_position();
-				float record = INFINITY;
-				triangle_t* closest = nullptr;
-				for (auto& tri : obj->trangles_to_render)
+				vec3_t close_pt = getClosePt(vec3_from_vec4(tri.points[0]),
+					vec3_from_vec4(tri.points[1]),
+					vec3_from_vec4(tri.points[2]),
+					get_camera_position());
+		
+				vec3_t player_sub_pt = vec3_sub(get_camera_position(), close_pt);
+				float dist = vec3_length(player_sub_pt);
+		
+				std::cout << "dist: " << dist << std::endl;
+				if (dist < camera_player_radius * camera_player_radius)
 				{
-					float dist = segIntersectTri(start, world, tri);
-					if (dist > 0 && dist < record)
-					{
-						record = dist;
-						closest = &tri;
-					}
+					DrawString(30, 30, "is_colliding");
 				}
-
-				if (closest)
+				else
 				{
-
-					DrawString(30, 30, "targeted!");
-
+					//DrawString(30, 30, "not_colliding");
 				}
-
-
+				
 			}
 		}
+			
+		
 
 		Object* obj = objectlist[0];
 		

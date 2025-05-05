@@ -5,8 +5,8 @@ static camera_t camera;
 
 void init_camera()
 {
-	camera.direction = vec3_t(0, 0, 1);
-	camera.strafe = vec3_t(1, 0, 0);
+	camera.direction = vec3_new(0, 0, 1);
+	camera.strafe = vec3_new(1, 0, 0);
 }
 
 vec3_t get_camera_position()
@@ -71,7 +71,7 @@ void rotate_camera_yaw(float angle)
 
 void rotate_camera_pitch(float angle)
 {
-  camera.pitch += angle;
+	camera.pitch += angle;
 }
 
 vec3_t get_camera_lookat_target()

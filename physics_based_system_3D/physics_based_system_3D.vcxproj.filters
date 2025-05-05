@@ -95,10 +95,10 @@
     <ClInclude Include="matrix.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Vector.h">
+    <ClInclude Include="aabb3.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="aabb3.h">
+    <ClInclude Include="Vector.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

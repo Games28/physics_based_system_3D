@@ -8,6 +8,7 @@
 #include "depthdrawer.h"
 #include <limits>
 
+
 typedef struct
 {
 	int a;
@@ -20,14 +21,13 @@ typedef struct
 	bool isVisible;
 }face_t;
 
-
 typedef struct
 {
 	vec4_t points[3];
 	tex2_t texcoords[3];
 	olc::Pixel p;
 	olc::Sprite* texture;
-	
+
 }triangle_t;
 
 void int_swap(int* v1, int* v2);
@@ -35,6 +35,8 @@ void float_swap(float* v1, float* v2);
 
 vec3_t get_triangle_normal(vec4_t vertices[3]);
 vec3_t get_triangle_cross(vec4_t vertices[3]);
+
+vec3_t getClosePt(vec3_t a, vec3_t b, vec3_t c, vec3_t pt);
 
 ////////////parallel rasterization /////////////////////////////////////
 void draw_triangle_fill(DepthDrawer& depth_draw, olc::PixelGameEngine* pge,
@@ -44,8 +46,6 @@ void draw_triangle_fill(DepthDrawer& depth_draw, olc::PixelGameEngine* pge,
 	olc::Pixel color);
 
 int edge_cross(vec2_t* a, vec2_t* b, vec2_t* p);
-
-float segIntersectTri(const vec3_t& s0, const vec3_t& s1, const triangle_t& tri);
 
 bool is_top_left(vec2_t* start, vec2_t* end);
 

@@ -14,9 +14,10 @@ void Object::load_cube_mesh(int side, olc::Pixel color, const char* png_filename
 	
 }
 
-void Object::load_obj_mesh(const char* obj_filename, const char* png_filename)
+void Object::load_obj_mesh(const char* obj_filename,  olc::Pixel color ,const char* png_filename)
 {
 	mesh = load_texture_mesh_data(obj_filename, png_filename);
+	object_color = color;
 }
 
 void Object::process_graphics_pipline_stages(olc::PixelGameEngine* pge)
@@ -292,6 +293,27 @@ void Object::Update(olc::PixelGameEngine* pge, float deltatime)
 		process_graphics_pipline_stages(pge);
 
 	
+}
+
+AABB3 Object::getAABB(int index)
+{
+	AABB3 box;
+	box.fitToEnclose(vec3_from_vec4(triangles[index].points[0]));
+	box.fitToEnclose(vec3_from_vec4(triangles[index].points[1]));
+	box.fitToEnclose(vec3_from_vec4(triangles[index].points[2]));
+	return box;
+}
+
+void Object::fitbounds()
+{
+	scene_bounds = AABB3();
+	for (int i = 0; i < triangles.size(); i++)
+	{
+		AABB3 box = getAABB(i);
+		scene_bounds.fitToEnclose(box.min);
+		scene_bounds.fitToEnclose(box.max);
+	}
+	int i = 0;
 }
 
 

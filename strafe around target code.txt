@@ -1,0 +1,19 @@
+if (GetKey(olc::SHIFT).bHeld)
+{
+	//stafe around target mostly working code. need to work on how to keep target object in the middle if moving
+	if (GetKey(olc::A).bHeld)
+	{
+		rotate_camera_yaw(-1.0f * deltatime);
+		stafe = vec3_cross(up_direction, get_camera_direction());
+
+		stafe = vec3_mul(stafe, 5.0f * deltatime);
+		set_new_camera_position(vec3_add(get_camera_position(), stafe));
+	};
+	if (GetKey(olc::D).bHeld)
+	{
+		rotate_camera_yaw(+1.0f * deltatime);
+		stafe = vec3_cross(up_direction, get_camera_direction());
+		stafe = vec3_mul(stafe, 5.0f * deltatime);
+		set_new_camera_position(vec3_sub(get_camera_position(), stafe));
+	};
+} 

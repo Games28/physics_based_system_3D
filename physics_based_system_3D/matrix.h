@@ -9,7 +9,7 @@ struct mat3_t
 {
 	vec2_t rows[2];
 	mat3_t() {}
-	mat3_t operator=(const mat3_t& m) const;
+	
 };
 
 //mat4
@@ -46,11 +46,7 @@ vec4_t mat4_mul_vec4_project(mat4_t mat_proj, vec4_t v);
 
 mat4_t mat4_look_at(vec3_t eye, vec3_t target, vec3_t up);
 
-mat4_t mat4_inverse(const mat4_t& m);
 
-mat4_t mat4_quickInverse(const mat4_t& a);
-
-float mat4_minor(int row, int col);
 
 #endif // !MATRIX_H
 

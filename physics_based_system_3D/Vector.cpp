@@ -137,6 +137,12 @@ float vec3_dot(vec3_t a, vec3_t b)
     return (a.x * b.x) + (a.y * b.y) + (a.z * b.z);
 }
 
+float vec3_mag2(vec3_t a, vec3_t b)
+{
+    float result = vec3_dot(a, b);
+    return result;
+}
+
 void vec3_normalize(vec3_t* v)
 {
     float length = sqrt(v->x * v->x + v->y * v->y + v->z * v->z);
@@ -212,3 +218,23 @@ vec2_t vec2_from_vec4(vec4_t v)
 
     return result;
 }
+
+
+
+
+
+vec4_t vec4_sub(vec4_t a, vec4_t b)
+{
+    return vec4_t();
+}
+
+vec4_t vec4_mul(vec4_t v, float factor)
+{
+    return vec4_t();
+}
+
+vec4_t vec4_div(vec4_t v, float factor)
+{
+    return vec4_t();
+}
+

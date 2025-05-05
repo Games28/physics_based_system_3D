@@ -35,10 +35,10 @@ mat4_t mat4_make_scale(float sx, float sy, float sz)
 
 mat4_t mat4_make_translation(float tx, float ty, float tz)
 {
-   // [ 1  0  0  tx ]
-   // [ 0  1  0  ty ]
-   // [ 0  0  1  tz ]
-   // [ 0  0  0   1 ]
+    // [ 1  0  0  tx ]
+    // [ 0  1  0  ty ]
+    // [ 0  0  1  tz ]
+    // [ 0  0  0   1 ]
     mat4_t m = mat4_identity();
     m.m[0][3] = tx;
     m.m[1][3] = ty;
@@ -67,23 +67,6 @@ mat4_t mat4_mul_mat4(mat4_t a, mat4_t b)
         {
             m.m[i][j] = a.m[i][0] * b.m[0][j] + a.m[i][1] * b.m[1][j] +
                 a.m[i][2] * b.m[2][j] + a.m[i][3] * b.m[3][j];
-        }
-    }
-
-    return m;
-}
-
-mat4_t mat4_mul_mat4_test(mat4_t a, mat4_t b)
-{
-    mat4_t m;
-
-    for (int i = 0; i < 4; i++)
-    {
-        for (int j = 0; j < 4; j++)
-        {
-            float sum = 0;
-            for (int k = 0; k < 4; k++) sum += a.m[i][k] * b.m[k][j];
-            m.m[i][j] = sum;
         }
     }
 
@@ -152,10 +135,10 @@ mat4_t mat4_make_rotation_z(float angle)
 
 mat4_t mat4_make_perspective(float fov, float aspect, float znear, float zfar)
 {
-   // [ (h/w) * 1/tan(fov/2)            0                 0                           0 ]
-   // [                    0 1/tan(fov/2)                 0                           0 ]
-   // [                    0            0 zfar/(zfar-znear)  (-zfar*znear)/(zfar-znear) ]
-   // [                    0            0                 1                           0 ] 
+    // [ (h/w) * 1/tan(fov/2)            0                 0                           0 ]
+    // [                    0 1/tan(fov/2)                 0                           0 ]
+    // [                    0            0 zfar/(zfar-znear)  (-zfar*znear)/(zfar-znear) ]
+    // [                    0            0                 1                           0 ] 
 
     mat4_t m = { {{0}} };
     m.m[0][0] = aspect * (1 / tan(fov / 2));
@@ -186,114 +169,25 @@ vec4_t mat4_mul_vec4_project(mat4_t mat_proj, vec4_t v)
 mat4_t mat4_look_at(vec3_t eye, vec3_t target, vec3_t up)
 {
     //forward (Z) vector
-    vec3_t z = vec3_sub(target,eye);
+    vec3_t z = vec3_sub(target, eye);
     vec3_normalize(&z);
     ////right (x) vector
     vec3_t x = vec3_cross(up, z);
     vec3_normalize(&x);
     ////up (y) vector
     vec3_t y = vec3_cross(z, x);
-    
+
     ////[ x.x  x.y  x.z  -dot(x,eye) ]
     ////[ y.x  y.y  y.z  -dot(y,eye) ]
     ////[ z.x  z.y  z.z  -dot(z,eye) ]
     ////[   0    0    0            1 ]
-    
+
     mat4_t view_matrix = { {
     { x.x, x.y, x.z, -vec3_dot(x,eye) },
     { y.x, y.y, y.z, -vec3_dot(y,eye) },
     { z.x, z.y, z.z, -vec3_dot(z,eye) },
     {   0,   0,   0,                1 }
-     }};
+     } };
 
     return view_matrix;
-}
-
-mat4_t mat4_inverse(const mat4_t& m)
-{
-    mat4_t cofactors;
-
-    //get cofactor matrix
-    for (int i = 0; i < 4; i++)
-    {
-        for (int j = 0; j < 4; j++)
-        {
-            cofactors.m[i][j] = ((i + j) % 2 ? -1 : 1) * mat4_minor(i, j);
-        }
-    }
-
-    //transpose of cofactor
-    mat4_t adjugate;
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            adjugate.m[i][j] = cofactors.m[j][i];
-        }
-    }
-
-    //get determinant using first row and cofactors
-    float det = 0;
-    for (int j = 0; j < 4; j++) {
-        det += m.m[0][j] * cofactors.m[0][j];
-    }
-
-    
-
-    //divide adjugate by determinant
-    mat4_t inv;
-    for (int i = 0; i < 4; i++) {
-        for (int j = 0; j < 4; j++) {
-            inv.m[i][j] = adjugate.m[i][j] / det;
-        }
-    }
-
-    return inv;
-}
-
-mat4_t mat4_quickInverse(const mat4_t& a)
-{
-    mat4_t b;
-    b.m[0][0] = a.m[0][0], b.m[0][1] = a.m[1][0], b.m[0][2] = a.m[2][0];
-    b.m[1][0] = a.m[0][1], b.m[1][1] = a.m[1][1], b.m[1][2] = a.m[2][1];
-    b.m[2][0] = a.m[0][2], b.m[2][1] = a.m[1][2], b.m[2][2] = a.m[2][2];
-    b.m[3][0] = -(a.m[3][0] * b.m[0][0] + a.m[3][1] * b.m[1][0] + a.m[3][2] * b.m[2][0]);
-    b.m[3][1] = -(a.m[3][0] * b.m[0][1] + a.m[3][1] * b.m[1][1] + a.m[3][2] * b.m[2][1]);
-    b.m[3][2] = -(a.m[3][0] * b.m[0][2] + a.m[3][1] * b.m[1][2] + a.m[3][2] * b.m[2][2]);
-    b.m[3][3] = 1;
-    return b;
-}
-
- 
-
-float mat4_minor(int row, int col)
-{
-    float v[4][4] = { 0 };
-    float m[3][3];
-    int subi = 0;
-    for (int i = 0; i < 4; ++i)
-    {
-        if (i == row) continue;
-        int subj = 0;
-        for (int j = 0; j < 4; ++j)
-        {
-            if (j == col) continue;
-            m[subi][subj] = v[i][j];
-            subj++;
-
-        }
-        subi++;
-    }
-    return
-        m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) -
-        m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) +
-        m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
-}
-
-
-
-mat3_t mat3_t::operator=(const mat3_t& m) const
-{
-    mat3_t result;
-    result.rows[0] = m.rows[0];
-    result.rows[1] = m.rows[1];
-    return result;
 }

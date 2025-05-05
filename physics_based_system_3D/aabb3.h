@@ -8,7 +8,7 @@ struct AABB3 {
 	vec3_t min = { INFINITY, INFINITY, INFINITY }, max = { -INFINITY, -INFINITY, -INFINITY };
 
 	vec3_t getCenter() const {
-		vec3_t result = vec3_add(min, max);
+		vec3_t result = vec3_sub(min,max);
 		result = vec3_div(result, 2);
 		return result;
 	}

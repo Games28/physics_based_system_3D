@@ -49,6 +49,54 @@ vec3_t get_triangle_cross(vec4_t vertices[3])
 
 	return cross;
 }
+
+vec3_t getClosePt(vec3_t a, vec3_t b, vec3_t c, vec3_t pt)
+{
+	vec3_t ab = vec3_sub(b, a);
+	vec3_t ac = vec3_sub(c, a);
+
+	vec3_t ap = vec3_sub(pt, a);
+	float d1 = vec3_dot(ab, ap);
+	float d2 = vec3_dot(ac, ap);
+	if (d1 <= 0 && d2 <= 0) return a;
+
+	vec3_t bp = vec3_sub(pt, b);
+	float d3 = vec3_dot(ab, bp);
+	float d4 = vec3_dot(ac, bp);
+	if (d3 >= 0 && d4 <= d3) return b;
+
+	vec3_t cp = vec3_sub(pt, c);
+	float d5 = vec3_dot(ab, cp);
+	float d6 = vec3_dot(ac, cp);
+	if (d6 >= 0 && d5 <= d6) return c;
+
+	float vc = d1 * d4 - d3 * d2;
+	if (vc <= 0 && d1 >= 0 && d3 <= 0) {
+		float v = d1 / (d1 - d3);
+		return vec3_add(a, vec3_mul(ab, v));
+	}
+
+	float vb = d5 * d2 - d1 * d6;
+	if (vb <= 0 && d2 >= 0 && d6 <= 0) {
+		float v = d2 / (d2 - d6);
+		return vec3_add(a, vec3_mul(ac, v));
+	}
+
+	float va = d3 * d6 - d5 * d4;
+	if (va <= 0 && (d4 - d3) >= 0 && (d5 - d6) >= 0) {
+		float v = (d4 - d3) / ((d4 - d3) + (d5 - d6));
+		vec3_t bc = vec3_sub(c, b);
+		return vec3_add(b, vec3_mul(bc, v));
+	}
+
+	float denom = 1 / (va + vb + vc);
+	float v = vb * denom;
+	float w = vc * denom;
+	return vec3_add(a, vec3_add(vec3_mul(ab, v), vec3_mul(ac, w)));
+}
+
+
+
 void draw_triangle_fill(DepthDrawer& depth_draw, olc::PixelGameEngine* pge, int x0, int y0, float z0, float w0, int x1, int y1, float z1, float w1, int x2, int y2, float z2, float w2, olc::Pixel color)
 {
 	int x_min = std::min(std::min(x0, x1), x2);
